@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westeurope"
+    },
+    "virtualNetworkName": {
+      "value": "contoso1-vnet"
+    },
+    "lbSubnetName": {
+      "value": "srvSubnet1"
+    },
+    "vmSubnetName": {
+      "value": "srvSubnet1"
+    },
+    "virtualNetworkResourceGroup": {
+      "value": "ArcLabTest"
+    },
+    "workspaceResourceGroup": {
+      "value": "rg-sentinel"
+    },
+    "workspaceName": {
+      "value": "ThoorSentinel-v2"
+    },
+    "environment": {
+      "value": "prod"
+    },
+    "sequence": {
+      "value": 1
+    },
+    "vmCount": {
+      "value": 2
+    },
+    "os": {
+      "value": "Ubuntu"
+    },
+    "vmSize": {
+      "value": "Standard_D2s_v5"
+    },
+    "storageAccountType": {
+      "value": "Standard_LRS"
+    },
+    "osDiskSize": {
+      "value": 30
+    },
+    "dataDiskSize": {
+      "value": 64
+    },
+    "adminUserName": {
+      "value": "azureuser"
+    },
+    "scriptsLocation": {
+      "value": "https://raw.githubusercontent.com/SvenAelterman/AzSentinel-syslogfwd-HA/main/scripts/"
+    },
+    "deploymentNamePrefix": {
+      "value": "syslog-HA-"
+    },
+    "resourceNameFormat": {
+      "value": "{0}-syslog-prod-westeurope-{1}"
+    },
+    "authenticationType": {
+      "value": "password"
+    }
+  }
+}
