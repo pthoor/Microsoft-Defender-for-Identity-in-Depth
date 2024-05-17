@@ -28,6 +28,8 @@ sudo bash ~/install_linux_azcmagent.sh
 # Other Azure related things and best practices for an Ubuntu server in Azure
 # ...
 
+sudo wget -O Forwarder_AMA_installer.py https://raw.githubusercontent.com/Azure/Azure-Sentinel/master/DataConnectors/Syslog/Forwarder_AMA_installer.py&&sudo python3 Forwarder_AMA_installer.py
+
 # Restart syslog service
 sudo systemctl restart rsyslog
 
