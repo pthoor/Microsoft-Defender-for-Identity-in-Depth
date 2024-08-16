@@ -1,17 +1,10 @@
 param location string
 
-@description('A value to indicate the deployment number.')
-@minValue(0)
-@maxValue(99)
-param sequence int = 1
-
 @description('Format string of the resource names.')
-param resourceNameFormat string = '{0}-syslog-{1}'
-
-var sequenceFormatted = format('{0:00}', sequence)
+param resourceNameFormat string = '{0}-syslog'
 
 resource ppg 'Microsoft.Compute/proximityPlacementGroups@2021-04-01' = {
-  name: format(resourceNameFormat, 'ppg', sequenceFormatted)
+  name: format(resourceNameFormat, 'ppg')
   location: location
   properties: {
     proximityPlacementGroupType: 'Standard'
@@ -19,7 +12,7 @@ resource ppg 'Microsoft.Compute/proximityPlacementGroups@2021-04-01' = {
 }
 
 resource avset 'Microsoft.Compute/availabilitySets@2021-04-01' = {
-  name: format(resourceNameFormat, 'avail', sequenceFormatted)
+  name: format(resourceNameFormat, 'avail')
   location: location
   sku: {
     name: 'Aligned'

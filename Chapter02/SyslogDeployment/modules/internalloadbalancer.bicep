@@ -8,15 +8,9 @@ param virtualNetworkResourceGroup string
 param subnetName string
 
 @description('Format string of the resource names.')
-param resourceNameFormat string = '{0}-syslog-{1}'
+param resourceNameFormat string = '{0}-syslog'
 
-@description('A value to indicate the deployment number.')
-@minValue(0)
-@maxValue(99)
-param sequence int = 1
-
-var sequenceFormatted = format('{0:00}', sequence)
-var lbName = format(resourceNameFormat, 'lbi', sequenceFormatted)
+var lbName = format(resourceNameFormat, 'lbi')
 var frontendName = 'syslog-internal-frontend'
 var backendName = 'syslog-backend'
 

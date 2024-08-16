@@ -1,5 +1,11 @@
 param location string
 
+@description('The name of the virtual machine')
+param vmName string
+
+@description('The name of the network interface card')
+param nicName string
+
 @description('Name of the Azure virtual network where the virtual machines needs to be deployed')
 param virtualNetworkName string
 
@@ -25,11 +31,6 @@ param adminPasswordOrKey string
 
 param avsetId string = ''
 
-@description('A value to indicate the deployment number')
-@minValue(0)
-@maxValue(99)
-param sequence int = 1
-
 param adminUserName string
 param vmSize string = 'Standard_D2s_v5'
 
@@ -41,6 +42,9 @@ param vmSize string = 'Standard_D2s_v5'
 ])
 param storageAccountType string
 
+@description('The name of the OS disk')
+param osDiskName string
+
 @description('The size of the OS disk in GB')
 @allowed([
   30
@@ -50,6 +54,9 @@ param storageAccountType string
   256
 ])
 param osDiskSize int
+
+@description('The name of the data disk')
+param dataDiskName string
 
 @description('The size of the data disk in GB')
 @allowed([
@@ -79,9 +86,6 @@ param osDetail object = {
   configScriptName: 'ubuntu_config.sh'
 }
 
-@description('The format of the resource name')
-param resourceNameFormat string = '{0}-syslog-{1}'
-
 @description('The URL of the configuration scripts')
 param scriptsLocation string
 param scriptsLocationAccessToken string = ''
@@ -98,7 +102,6 @@ var linuxSshConfiguration = {
   }
 }
 
-var sequenceFormatted = format('{0:00}', sequence)
 var configScript = uri('${scriptsLocation}${osDetail.configScriptName}', '${scriptsLocationAccessToken}')
 
 resource vnet 'Microsoft.Network/virtualNetworks@2021-02-01' existing = {
@@ -112,7 +115,7 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing 
 }
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
-  name: format(resourceNameFormat, 'nic', sequenceFormatted)
+  name: nicName
   location: location
   properties: {
     enableAcceleratedNetworking: true
@@ -136,7 +139,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-02-01' = {
 }
 
 resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
-  name: format(resourceNameFormat, 'vm', sequenceFormatted)
+  name: vmName
   location: location
   properties: {
     availabilitySet: empty(avsetId) ? null : {
@@ -148,7 +151,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
     storageProfile: {
       imageReference: osDetail.imageReference
       osDisk: {
-        name: format(resourceNameFormat, 'osDisk', sequenceFormatted)
+        name: osDiskName
         osType: 'Linux'
         diskSizeGB: osDiskSize
         createOption: 'FromImage'
@@ -160,7 +163,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
       }
       dataDisks: [
         {
-          name: format(resourceNameFormat, 'dataDisk', sequenceFormatted)
+          name: dataDiskName
           lun: 0
           diskSizeGB: dataDiskSize
           createOption: 'Empty'
@@ -173,7 +176,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-09-01' = {
       ]
     }
     osProfile: {
-      computerName: format('vm-syslog-{0}', sequenceFormatted)
+      computerName: vmName
       adminUsername: adminUserName
       adminPassword: adminPasswordOrKey
       linuxConfiguration: ((authenticationType == 'password') ? null : linuxSshConfiguration)

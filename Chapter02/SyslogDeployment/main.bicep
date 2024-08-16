@@ -4,6 +4,12 @@ targetScope = 'subscription'
 
 param location string
 
+@description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
+param deploymentNumber string = '1'
+
+@description('Name of the virtual machines to be created')
+param vmName string
+
 @description('Name of the virtual network, where the load balancer and virtual machines will be created')
 param virtualNetworkName string
 
@@ -22,19 +28,17 @@ param workspaceResourceGroup string
 @description('Name of the existing Log Analytics workspace with Sentinel')
 param workspaceName string
 
+@description('Name of Data Collection Rule to be created')
+param dcrName string
+
 @secure()
 param adminPassword string = newGuid()
 
 param environment string
 
-@description('A value to indicate the deployment number.')
-@minValue(0)
+@minValue(1)
 @maxValue(4)
-param sequence int
-
-@minValue(2)
-@maxValue(4)
-param vmCount int
+param SyslogSrvToDeploy int
 
 param os string = 'Ubuntu'
 param vmSize string = 'Standard_D2s_v5'
@@ -42,17 +46,19 @@ param storageAccountType string
 param osDiskSize int
 param dataDiskSize int
 param adminUserName string
-param scriptsLocation string = 'https://raw.githubusercontent.com/SvenAelterman/AzSentinel-syslogfwd-HA/main/scripts/'
 param deploymentNamePrefix string
-
-@description('Format string of the resource names.')
-param resourceNameFormat string = '{0}-syslog-${environment}-${location}-{1}'
+param authenticationType string = 'password'
 
 // Variables
 
-param authenticationType string = 'password'
+var shortenedLocation = location == 'westeurope' ? 'weu' : location == 'swedencentral' ? 'sec' : location
 
-var sequenceFormatted = format('{0:00}', sequence)
+@description('Format string of the resource names.')
+var resourceNameFormat = '{0}-syslog-${environment}-${shortenedLocation}'
+
+@description('Format string of storage account name.')
+var resourceNameFormat_storageAccount = '{0}syslog${environment}${shortenedLocation}'
+
 
 var osDetails = {
   Ubuntu: {
@@ -62,7 +68,7 @@ var osDetails = {
       sku: '22_04-lts-gen2'
       version: 'latest'
     }
-    configScriptName: 'ubuntu.sh'
+    configScriptName: 'ubuntu_config.sh'
   }
 }
 
@@ -82,55 +88,81 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' exis
 }
 
 resource target_resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: format(resourceNameFormat, 'rg', sequenceFormatted)
+  name: format(resourceNameFormat, 'rg', deploymentNumber)
   location: location
 }
 
-module loadBalancerInternal './modules/internalloadbalancer.bicep' = if (vmCount > 1) {
+module storageAccount './modules/storageAccount.bicep' = {
+  name: '${deploymentNamePrefix}sa'
+  scope: target_resourceGroup
+  params: {
+    location: location
+    resourceNameFormat: resourceNameFormat_storageAccount
+    containerName: 'scripts'
+    scriptUrl: 'https://raw.githubusercontent.com/pthoor/Microsoft-Defender-for-Identity-in-Depth/main/Chapter2/Bicep_Syslog/scripts/ubuntu_config.sh'
+  }
+}
+
+// Find the scripts location from the storage account module output
+var scriptsLocation = storageAccount.outputs.scriptFileUrl
+
+module loadBalancerInternal './modules/internalloadbalancer.bicep' = if (SyslogSrvToDeploy >= 2) {
   name: '${deploymentNamePrefix}lbi'
   scope: target_resourceGroup
   params: {
     location: location
     subnetName: empty(lbSubnetName) ? vmSubnetName : lbSubnetName
     resourceNameFormat: resourceNameFormat
-    sequence: sequence
     virtualNetworkName: virtualNetworkName
     virtualNetworkResourceGroup: virtualNetworkResourceGroup
   }
 }
 
-module availabilitySet './modules/availabilitySet.bicep' = {
+module availabilitySet './modules/availabilitySet.bicep' = if (SyslogSrvToDeploy >= 2) {
   name: '${deploymentNamePrefix}avail'
   scope: target_resourceGroup
   params: {
     location: location
     resourceNameFormat: resourceNameFormat
-    sequence: sequence
   }
 }
 
-module vm './modules/vm.bicep' = [for i in range(sequence, vmCount): {
-  name: '${deploymentNamePrefix}vm-${i}'
+module vm './modules/vm.bicep' = [for i in range(0, SyslogSrvToDeploy): {
+  name: '${deploymentNamePrefix}vm-${vmName}-${i}'
   scope: target_resourceGroup
   params: {
+    vmName: 'vm-${vmName}-${i}'
     adminUserName: adminUserName
     osDetail: osDetails[os]
+    nicName: 'nic-${vmName}-${i}'
     virtualNetworkName: virtualNetworkName
     virtualNetworkResourceGroup: virtualNetworkResourceGroup
     subnetName: vmSubnetName
+    osDiskName: 'osDisk-${vmName}-${i}'
     osDiskSize: osDiskSize
+    dataDiskName: 'dataDisk-${vmName}-${i}'
     dataDiskSize: dataDiskSize
     storageAccountType: storageAccountType
-    sequence: i
     adminPasswordOrKey: adminPassword
-    resourceNameFormat: resourceNameFormat
     location: location
     vmSize: vmSize
     workspaceId: workspaceId
     workspaceKey: workspaceKey
     scriptsLocation: scriptsLocation
-    lbiBackendAddressPoolId: vmCount > 1 ? loadBalancerInternal.outputs.backendAddressPoolId : ''
+    lbiBackendAddressPoolId: SyslogSrvToDeploy >= 2 ? loadBalancerInternal.outputs.backendAddressPoolId : ''
     avsetId: availabilitySet.outputs.avsetId
     authenticationType: authenticationType
   }
+  dependsOn: [
+    storageAccount
+  ]
 }]
+
+module dcr 'modules/dataCollectionRule.bicep' = {
+  name: '${deploymentNamePrefix}dcr'
+  scope: target_resourceGroup
+  params: {
+    dcrName: dcrName
+    logAnalyticsWorkspaceId: logAnalytics.id
+  }
+}

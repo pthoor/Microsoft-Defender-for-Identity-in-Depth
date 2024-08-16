@@ -5,6 +5,9 @@
     "location": {
       "value": "westeurope"
     },
+    "vmName": {
+      "value": "syslog"
+    },
     "virtualNetworkName": {
       "value": "contoso1-vnet"
     },
@@ -26,10 +29,7 @@
     "environment": {
       "value": "prod"
     },
-    "sequence": {
-      "value": 1
-    },
-    "vmCount": {
+    "SyslogSrvToDeploy": {
       "value": 2
     },
     "os": {
@@ -45,19 +45,13 @@
       "value": 30
     },
     "dataDiskSize": {
-      "value": 64
+      "value": 32
     },
     "adminUserName": {
       "value": "azureuser"
     },
-    "scriptsLocation": {
-      "value": "https://raw.githubusercontent.com/SvenAelterman/AzSentinel-syslogfwd-HA/main/scripts/"
-    },
     "deploymentNamePrefix": {
       "value": "syslog-HA-"
-    },
-    "resourceNameFormat": {
-      "value": "{0}-syslog-prod-westeurope-{1}"
     },
     "authenticationType": {
       "value": "password"
