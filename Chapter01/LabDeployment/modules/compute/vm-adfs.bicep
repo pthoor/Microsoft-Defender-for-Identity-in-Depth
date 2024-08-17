@@ -180,7 +180,6 @@ resource adfsVMName_1_joindomain 'Microsoft.Compute/virtualMachines/extensions@2
   location: location
   tags: {
     displayName: 'adfsVMJoin'
-    isClient: 'true'
   }
   properties: {
     publisher: 'Microsoft.Compute'

@@ -147,7 +147,7 @@ param srvSubnetAddressRange string = '10.0.5.0/26'
   1
   2
 ])
-param AdSrvToDeploy int = 2
+param AdSrvToDeploy int = 1
 
 
 param location string = resourceGroup().location
