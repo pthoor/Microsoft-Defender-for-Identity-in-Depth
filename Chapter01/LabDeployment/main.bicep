@@ -3,7 +3,6 @@ param assetLocation string = 'https://raw.githubusercontent.com/pthoor/deploy-az
 
 // Key Vault parameters
 @description('Globally unique Vault name must only contain alphanumeric characters and dashes and cannot start with a number.')
-//param keyvaultName string
 param sku string = 'standard'
 param skuCode string = 'A'
 
@@ -12,10 +11,6 @@ param objectId string
 
 @description('The overall environment name for the deployment.')
 param environmentName string = 'contoso'
-
-// Log Analytics workspace parameters
-//@description('Globally unique name for the Log Analytics workspace.')
-//param logAnalyticsWorkspaceName string
 
 @description('Duration to retain Log Analytics workspace data, in days. Note that the pay-as-you-go pricing tier has a minimum 30-day retention.')
 @minValue(30)
@@ -66,42 +61,39 @@ param adminPassword string = 'rP_LZmhEzhQ3KF3'
 @description('Two-part internal AD name - short/NB name will be first part (\'contoso\').')
 param adDomainName string = 'contoso.local'
 
-@description('JSON object array of users that will be loaded into AD once the domain is established.')
-param usersArray array = [
-  {
-    FName: 'Bob'
-    LName: 'Jones'
-    SAM: 'bjones'
-  }
-  {
-    FName: 'Bill'
-    LName: 'Smith'
-    SAM: 'bsmith'
-  }
-  {
-    FName: 'Mary'
-    LName: 'Phillips'
-    SAM: 'mphillips'
-  }
-  {
-    FName: 'Sue'
-    LName: 'Jackson'
-    SAM: 'sjackson'
-  }
-]
+//@description('JSON object array of users that will be loaded into AD once the domain is established.')
+//param usersArray array = [
+//  {
+//    FName: 'Bob'
+//    LName: 'Jones'
+//    SAM: 'bjones'
+//  }
+//  {
+//    FName: 'Bill'
+//    LName: 'Smith'
+//    SAM: 'bsmith'
+//  }
+//  {
+//    FName: 'Mary'
+//    LName: 'Phillips'
+//    SAM: 'mphillips'
+//  }
+//  {
+//    FName: 'Sue'
+//    LName: 'Jackson'
+//    SAM: 'sjackson'
+//  }
+//]
 
-@description('Enter the password that will be applied to each user account to be created in AD.')
-@secure()
-param defaultUserPassword string = 'rP_LZmhEzhQ3KF3'
+//@description('Enter the password that will be applied to each user account to be created in AD.')
+//@secure()
+//param defaultUserPassword string = 'rP_LZmhEzhQ3KF3'
 //param defaultUserPassword string = newGuid() rP_LZmhEzhQ3KF3
 
 @description('An ADFS/WAP server combo will be setup independently this number of times. NOTE: it\'s unlikely to ever need more than one - additional farm counts are for edge case testing.')
 @allowed([
   '1'
   '2'
-  '3'
-  '4'
-  '5'
 ])
 param AdfsFarmCount string = '1'
 
@@ -135,6 +127,9 @@ param adIP string = '10.0.1.4'
 @description('The IP Addresses assigned to the AD FS servers (a, b). Remember the first IP in a subnet is .4 e.g. 10.0.0.0/16 reserves 10.0.0.0-3. Specify one IP per server - must match numberofVMInstances or deployment will fail.')
 param adfsIP string = '10.0.1.8'
 
+@description('The IP Addresses assigned to the ADCS servers (a, b). Remember the first IP in a subnet is .4 e.g.' )
+param adcsIP string = '10.0.1.6'
+
 @description('The address range of the desired subnet for the DMZ.')
 param dmzSubnetAddressRange string = '10.0.2.0/24'
 
@@ -147,12 +142,10 @@ param bastionSubnetAddressRange string = '10.0.4.0/26'
 @description('The address range of the desired subnet for servers.')
 param srvSubnetAddressRange string = '10.0.5.0/26'
 
-@description('AdSrvToDeploy, possible values: 1-4.')
+@description('AdSrvToDeploy, possible values: 1-2.')
 @allowed([
   1
   2
-  3
-  4
 ])
 param AdSrvToDeploy int = 2
 
@@ -160,18 +153,18 @@ param AdSrvToDeploy int = 2
 param location string = resourceGroup().location
 param region string = 'sdc'
 
-var vaultName = 'rsVault${uniqueString(resourceGroup().id)}'
-
 var automationaccountname = 'aa${uniqueString(resourceGroup().id)}'
 var logAnalyticsWorkspaceName = 'la${uniqueString(resourceGroup().id)}'
 var adfsDeployCount = int(AdfsFarmCount)
 var networkInterfaceName = 'nic'
 var addcVMNameSuffix = 'dc'
+var adcsVMNameSuffix = 'cs'
 var adfsVMNameSuffix = 'fs'
 var wapVMNameSuffix = 'wap'
 var companyNamePrefix = split(adDomainName, '.')[0]
 var adfsVMName = toUpper('${companyNamePrefix}${adfsVMNameSuffix}')
 var adVMName = toUpper('${companyNamePrefix}${addcVMNameSuffix}')
+var adcsVMName = toUpper('${companyNamePrefix}${adcsVMNameSuffix}')
 var adNSGName = 'nsg-int-ad'
 var virtualNetworkName = 'vnet-${environmentName}-${region}-001'
 var adSubnetName = 'snet-ad-${region}-001'
@@ -185,12 +178,12 @@ var srvNSGName = 'nsg-int-cli'
 var srvSubnetName = 'snet-srv-${region}-001'
 var publicIPAddressDNSName = toLower('${companyNamePrefix}${deploymentNumber}-adfs-${uniqueString(resourceGroup().id)}')
 var wapVMName = toUpper('${companyNamePrefix}${wapVMNameSuffix}')
-var adDSCTemplate = '${assetLocation}scripts/adDSCConfiguration.zip'
+//var adDSCTemplate = '${assetLocation}scripts/adDSCConfiguration.zip'
 var DeployADFSFarmTemplate = 'InstallADFS.ps1'
 var DeployADFSFarmTemplateUri = '${assetLocation}scripts/InstallADFS.ps1'
 var CopyCertToWAPTemplate = 'CopyCertToWAP.ps1'
 var CopyCertToWAPTemplateUri = '${assetLocation}scripts/CopyCertToWAP.ps1'
-var adDSCConfigurationFunction = 'adDSCConfiguration.ps1\\DomainController'
+//var adDSCConfigurationFunction = 'adDSCConfiguration.ps1\\DomainController'
 var subnets = [
   {
     name: adSubnetName
@@ -306,6 +299,26 @@ module virtualNetworkDNSUpdate 'modules/networking/vnet-dns.bicep' = {
   }
   dependsOn: [
     adVMs
+  ]
+}
+
+module adcsVM 'modules/compute/vm-adcs.bicep' = {
+  name: 'adcsVM'
+  params: {
+    adcsIP: adcsIP
+    adSubnetName: adSubnetName
+    adcsVMName: adcsVMName
+    adDomainName: adDomainName
+    adminPassword: adminPassword
+    adminUsername: adminUsername
+    location: location
+    NetworkInterfaceName: networkInterfaceName
+    virtualNetworkName: virtualNetworkName
+    vmSize: vmSize
+    deploymentNumber: deploymentNumber
+  }
+  dependsOn: [
+    virtualNetworkDNSUpdate
   ]
 }
 
