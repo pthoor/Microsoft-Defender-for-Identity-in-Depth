@@ -15,7 +15,7 @@ param DeployADTemplateUri string = 'https://raw.githubusercontent.com/pthoor/dep
 param deploymentNumber string = '1'
 param adSubnetName string = 'adSubnet'
 param adVMName string = 'AZAD'
-param adDomainName string = 'contoso.com'
+param adDomainName string = 'contoso.local'
 
 @metadata({ Description: 'The region to deploy the resources into' })
 param location string

@@ -61,7 +61,7 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2022-01-01' = {
   name: bastionHostName
   location: location
   sku: {
-    name: 'Basic'
+    name: 'Standard'
   }
   properties: {
     ipConfigurations: [
@@ -84,5 +84,4 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2022-01-01' = {
 }
 
 output bastionId string = bastionHost.id
-
 output VNet object = virtualNetworkName_resource.properties

@@ -1,5 +1,5 @@
 @description('This is the location in which all the linked templates are stored.')
-param assetLocation string = 'https://raw.githubusercontent.com/pthoor/deploy-azure/main/active-directory-with-windows-client/'
+param assetLocation string = 'https://raw.githubusercontent.com/pthoor/microsoft-defender-for-identity-in-depth/main/Chapter01/LabDeployment/'
 
 // Key Vault parameters
 @description('Globally unique Vault name must only contain alphanumeric characters and dashes and cannot start with a number.')
@@ -207,6 +207,9 @@ var subnets = [
     name: dmzSubnetName
     properties: {
       addressprefix: dmzSubnetAddressRange
+      natGateway: {
+        id: natgw.outputs.natgwresourceId
+      }
       networkSecurityGroup: {
         id: resourceId('Microsoft.Network/networkSecurityGroups', dmzNSGName)
       }
@@ -266,6 +269,15 @@ module NSGs 'modules/networking/vnet-nsg.bicep' = {
   }
 }
 
+module natgw 'modules/networking/nat-gw.bicep' = {
+  name: 'natgw'
+  params: {
+    location: location
+  }
+  dependsOn: [
+  ]
+}
+
 module adVMs 'modules/compute/vm-ad.bicep' = [for i in range(0, AdSrvToDeploy): {
   name: '${adVMName}${i}'
   params: {
@@ -319,6 +331,7 @@ module adcsVM 'modules/compute/vm-adcs.bicep' = {
   }
   dependsOn: [
     virtualNetworkDNSUpdate
+    adfsVMs
   ]
 }
 
@@ -462,11 +475,11 @@ resource dcr 'Microsoft.Insights/dataCollectionRules@2021-09-01-preview' = {
 
 // Create a data collection rule association for the domain controller
 resource domainControllerVm 'Microsoft.Compute/virtualMachines@2021-11-01' existing =[for i in range(0, AdSrvToDeploy): {
-  name: adVMName
+  name: '${adVMName}${i}'
 }]
 
 resource domainControllerAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2021-04-01' = [for i in range(0, AdSrvToDeploy): {
-  name: '${'adVMs'}-dcra'
+  name: '${'adVMs'}${i}-dcra'
   dependsOn: [
     workspace
     adVMs
@@ -476,9 +489,6 @@ resource domainControllerAssociation 'Microsoft.Insights/dataCollectionRuleAssoc
     dataCollectionRuleId: dcr.id
   }
 }]
-
-
-
 
 resource kvRef 'Microsoft.KeyVault/vaults@2023-07-01' existing  = {
   name: keyvault.name

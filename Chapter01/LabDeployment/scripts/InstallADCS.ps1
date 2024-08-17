@@ -15,7 +15,7 @@ Install-WindowsFeature ADCS-Cert-Authority, ADCS-Web-Enrollment, ADCS-Online-Cer
 Install-AdcsCertificationAuthority `
     -CAType EnterpriseRootCA `
     -CACommonName $CommonName `
-    -CADistinguishedNameSuffix "DC=contoso,DC=com" `
+    -CADistinguishedNameSuffix "DC=contoso,DC=local" `
     -CryptoProviderName $CSP `
     -KeyLength $KeyLength `
     -HashAlgorithmName "SHA256" `

@@ -9,13 +9,13 @@ param adminPassword string
 param adminUsername string
 
 @description('Location of scripts')
-param DeployADCSTemplateUri string = 'https://raw.githubusercontent.com/pthoor/microsoft-defender-for-identity-in-depth/main/Chapter01/'
+param DeployADCSTemplateUri string = 'https://raw.githubusercontent.com/pthoor/microsoft-defender-for-identity-in-depth/main/Chapter01/LabDeployment/'
 
 @description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
 param deploymentNumber string = '1'
 param adSubnetName string = 'adSubnet'
 param adcsVMName string = 'AZADCS'
-param adDomainName string = 'contoso.com'
+param adDomainName string = 'contoso.local'
 
 @metadata({ Description: 'The region to deploy the resources into' })
 param location string
@@ -122,8 +122,9 @@ resource adcsVMName_resource 'Microsoft.Compute/virtualMachines@2022-08-01' = {
   }
 }
 
-resource srv_Win_srvToDeploy_1_deploymentNumber_joindomain 'Microsoft.Compute/virtualMachines/extensions@2022-08-01' = {
-  name: 'adcsVMName/joindomain'
+resource adcs_joindomain 'Microsoft.Compute/virtualMachines/extensions@2022-08-01' = {
+  name: 'joindomain'
+  parent: adcsVMName_resource
   location: location
   tags: {
     displayName: 'adcsVMJoin'
@@ -144,13 +145,11 @@ resource srv_Win_srvToDeploy_1_deploymentNumber_joindomain 'Microsoft.Compute/vi
       Password: adminPassword
     }
   }
-  dependsOn: [
-    adcsVMName_resource
-  ]
 }
 
 resource adcsVMName_InstallADCS 'Microsoft.Compute/virtualMachines/extensions@2015-06-15' = {
-  name: 'adcsVMName/InstallADCS'
+  name: 'InstallADCS'
+  parent: adcsVMName_resource
   location: location
   properties: {
     publisher: 'Microsoft.Compute'
@@ -165,7 +164,7 @@ resource adcsVMName_InstallADCS 'Microsoft.Compute/virtualMachines/extensions@20
     }
   }
   dependsOn: [
-    adcsVMName_resource
+    adcs_joindomain
   ]
 }
 
