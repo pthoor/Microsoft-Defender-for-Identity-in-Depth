@@ -11,8 +11,9 @@ param adminUsername string
 @description('Location of scripts')
 param DeployADTemplateUri string = 'https://raw.githubusercontent.com/pthoor/deploy-azure/main/active-directory-with-windows-client/'
 
-@description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
-param deploymentNumber string = '1'
+//@description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
+//param deploymentNumber string = '1'
+
 param adSubnetName string = 'adSubnet'
 param adVMName string = 'AZAD'
 param adDomainName string = 'contoso.local'
@@ -30,8 +31,8 @@ param vmSize string = 'Standard_B2ms'
 var imageOffer = 'WindowsServer'
 var imagePublisher = 'MicrosoftWindowsServer'
 var imageSKU = '2022-datacenter'
-var adPubIPName = 'adPubIP${deploymentNumber}'
-var adNicName = 'ad-${NetworkInterfaceName}${deploymentNumber}'
+var adPubIPName = 'ad-pip'
+var adNicName = 'ad-${NetworkInterfaceName}'
 
 resource adPIPName 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   name: adPubIPName
@@ -42,7 +43,7 @@ resource adPIPName 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
-      domainNameLabel: toLower('${adVMName}${deploymentNumber}${uniqueString(resourceGroup().id)}')
+      domainNameLabel: toLower('${adVMName}${uniqueString(resourceGroup().id)}')
     }
   }
 }
@@ -56,7 +57,7 @@ resource ad_NicName 'Microsoft.Network/networkInterfaces@2022-07-01' = {
   properties: {
     ipConfigurations: [
       {
-        name: 'ipconfig${deploymentNumber}'
+        name: 'adipconfig'
         properties: {
           privateIPAllocationMethod: 'Static'
           subnet: {

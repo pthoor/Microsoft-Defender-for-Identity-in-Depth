@@ -1,30 +1,78 @@
-## Look in the %LocalAppDaya%\temp\ folder for the MDI installation log file
-## Look for file called with todays date: Azure Advanced Threat Protection Sensor_20240214062046_000_MsiPackage
-## Look for MSI (s) (90:9C) [07:14:38:171]: Product: Azure Advanced Threat Protection Sensor -- Installation completed successfully.
-## MSI (s) (90:9C) [07:14:38:171]: Windows Installer installed the product. Product Name: Azure Advanced Threat Protection Sensor. Product Version: 2.228.17612.22841. Product Language: 1033. Manufacturer: Microsoft Corporation. Installation success or error status: 0.
+<#
+.SYNOPSIS
+    Retrieves the installation code and product version from the MDI installation log file.
 
+.DESCRIPTION
+    This script retrieves the installation code and product version from the MDI installation log file.
+    It searches for the latest log file in the user's temporary folder that matches the naming pattern.
+    If the log file is found, it extracts the installation code and product version from the log file.
+    Finally, it outputs the installation code and product version.
 
-# Get-MDIInstallCode.ps1
+.PARAMETER None
+
+.INPUTS
+    None.
+
+.OUTPUTS
+    $MDIInstallCode
+    $productVersion
+
+.NOTES
+    This script requires the user to have the appropriate permissions to access the log file.
+
+.LINK
+    N/A
+
+.EXAMPLE
+    Get-MDIInstallCode.ps1
+    Retrieves the installation code and product version from the MDI installation log file.
+
+#>
 
 # Get the installation code from the MDI installation log file
-$MDIInstallLog = Get-ChildItem -Path "$env:LocalAppData\Temp" -Filter "Azure Advanced Threat Protection Sensor_$(Get-Date -Format "yyyyMMdd")*.log" -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1
+$MDIInstallLog = Get-ChildItem -Path "$env:LocalAppData\Temp" -Filter "Azure Advanced Threat Protection Sensor_*_MsiPackage.log" -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1
 if ($MDIInstallLog -eq $null) {
-    Write-Output "MDI installation log file not found"
-    exit
+    Write-Host "MDI installation log file not found"
 }
 
-$MDIInstallCode = Get-Content -Path $MDIInstallLog.FullName | Select-String -Pattern "Installation completed successfully" -Context 0,1
+$MDIInstallCode = Get-Content -Path $MDIInstallLog.FullName | Select-String -Pattern "Installation completed successfully"
 if ($MDIInstallCode -eq $null) {
-    Write-Output "MDI installation code not found"
-    exit
+    Write-Host "MDI installation code not found"
 }
 
-# Extract the product version found in the same logfile, the row looks like this - MSI (s) (90:9C) [07:14:38:171]: Windows Installer installed the product. Product Name: Azure Advanced Threat Protection Sensor. Product Version: 2.228.17612.22841. Product Language: 1033. Manufacturer: Microsoft Corporation. Installation success or error status: 0.
-$MDIProductVersion = Get-Content -Path $MDIInstallLog.FullName | Select-String -Pattern "Product Version:" | ForEach-Object { $_ -replace "Product Version: ", "" }
-$MDIProductVersion = $MDIProductVersion -replace "`r`n", ""
-$MDIProductVersion = $MDIProductVersion[1].Trim()
-
+# Extract the product version found in the same logfile
+$MDIProductVersion = Get-Content -Path $MDIInstallLog.FullName | Select-String -Pattern "Product Version:"
+if ($MDIProductVersion -match '\d+\.\d+\.\d+\.\d+') {
+    $productVersion = $matches[0]
+    Write-Host "Product version found."
+} else {
+    Write-Host "Product version not found."
+}
 
 # Output the results
-Write-Output "MDI installation code: $MDIInstallCode"
-Write-Output "MDI product version: $MDIProductVersion"
+Write-Host "MDI installation code: $MDIInstallCode"
+Write-Host "MDI product version: $productVersion"
+
+# Get the installation code from the MDI installation log file
+$MDIInstallLog = Get-ChildItem -Path "$env:LocalAppData\Temp" -Filter "Azure Advanced Threat Protection Sensor_*_MsiPackage.log" -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1
+if ($MDIInstallLog -eq $null) {
+    Write-Host "MDI installation log file not found"
+}
+
+$MDIInstallCode = Get-Content -Path $MDIInstallLog.FullName | Select-String -Pattern "Installation completed successfully"
+if ($MDIInstallCode -eq $null) {
+    Write-Host "MDI installation code not found"
+}
+
+# Extract the product version found in the same logfile
+$MDIProductVersion = Get-Content -Path $MDIInstallLog.FullName | Select-String -Pattern "Product Version:"
+if ($MDIProductVersion -match '\d+\.\d+\.\d+\.\d+') {
+    $productVersion = $matches[0]
+    Write-Host "Product version found."
+} else {
+    Write-Host "Product version not found."
+}
+
+# Output the results
+Write-Host "MDI installation code: $MDIInstallCode"
+Write-Host "MDI product version: $productVersion"

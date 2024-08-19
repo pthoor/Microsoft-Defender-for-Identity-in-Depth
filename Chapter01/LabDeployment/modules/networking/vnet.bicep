@@ -64,6 +64,12 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2022-01-01' = {
     name: 'Standard'
   }
   properties: {
+    disableCopyPaste: false
+    enableFileCopy: true
+    enableIpConnect: true
+    enableShareableLink: false
+    enableTunneling: true
+    scaleUnits: 2
     ipConfigurations: [
       {
         name: 'IpConf'

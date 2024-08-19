@@ -12,8 +12,9 @@ param adminPassword string
 @description('Admin username')
 param adminUsername string
 
-@description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
-param deploymentNumber string = '1'
+//@description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
+//param deploymentNumber string = '1'
+
 param dmzSubnetName string = 'adSubnet'
 
 @metadata({ Description: 'The region to deploy the resources into' })
@@ -43,14 +44,14 @@ var shortDomainName = split(adDomainName, '.')[0]
 var adfsNetworkArr = split(adfsIP, '.')
 var adfsStartIpNodeAddress = int(adfsNetworkArr[3])
 var adfsNetworkString = '${adfsNetworkArr[0]}.${adfsNetworkArr[1]}.${adfsNetworkArr[2]}.'
-var adfsNICName = 'adfs-${NetworkInterfaceName}${deploymentNumber}'
-var adfsPubIpName = 'ADFSPubIP${deploymentNumber}'
+var adfsNICName = 'adfs-${NetworkInterfaceName}'
+var adfsPubIpName = 'adfs-pip'
 var domainJoinOptions = '3'
 var imageOffer = 'WindowsServer'
 var imagePublisher = 'MicrosoftWindowsServer'
 var imageSKU = '2012-R2-Datacenter'
-var wapNICName = 'wap-${NetworkInterfaceName}${deploymentNumber}'
-var wapPubIpName = 'WAPPubIP${deploymentNumber}'
+var wapNICName = 'wap-${NetworkInterfaceName}'
+var wapPubIpName = 'wap-pip'
 
 resource adfsPubIpName_1 'Microsoft.Network/publicIPAddresses@2022-07-01' = [for i in range(0, adfsDeployCount): {
   name: '${adfsPubIpName}${i}'
@@ -61,7 +62,7 @@ resource adfsPubIpName_1 'Microsoft.Network/publicIPAddresses@2022-07-01' = [for
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
-      domainNameLabel: toLower('${adfsVMName}${deploymentNumber}${uniqueString(resourceGroup().id)}')
+      domainNameLabel: toLower('${adfsVMName}${uniqueString(resourceGroup().id)}')
     }
   }
 }]
@@ -92,7 +93,7 @@ resource adfsNICName_1 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i
   properties: {
     ipConfigurations: [
       {
-        name: 'adfsipconfig${deploymentNumber}${i}'
+        name: 'adfsipconfig${i}'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           privateIPAddress: '${adfsNetworkString}${adfsStartIpNodeAddress}'
@@ -120,7 +121,7 @@ resource wapNICName_1 'Microsoft.Network/networkInterfaces@2022-07-01' = [for i 
   properties: {
     ipConfigurations: [
       {
-        name: 'wapipconfig${deploymentNumber}-${i}'
+        name: 'wapipconfig${i}'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {

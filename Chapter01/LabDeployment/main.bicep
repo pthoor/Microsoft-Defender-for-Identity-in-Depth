@@ -38,21 +38,6 @@ module keyvault 'modules/keyvault.bicep' = {
 @description('Username to set for the local User. Cannot be "Administrator", "root" and possibly other such common account names. ')
 param adminUsername string = 'localAdmin'
 
-@description('When deploying the stack N times simultaneously, define the instance - this will be appended to some resource names to avoid collisions.')
-@allowed([
-  '0'
-  '1'
-  '2'
-  '3'
-  '4'
-  '5'
-  '6'
-  '7'
-  '8'
-  '9'
-])
-param deploymentNumber string = '1'
-
 @description('Password for the local administrator account. Cannot be "P@ssw0rd" and possibly other such common passwords. Must be 8 characters long and three of the following complexity requirements: uppercase, lowercase, number, special character')
 @secure()
 param adminPassword string = 'rP_LZmhEzhQ3KF3'
@@ -176,13 +161,14 @@ var cliNSGName = 'nsg-int-cli'
 var cliSubnetName = 'snet-client-${region}-001'
 var srvNSGName = 'nsg-int-cli'
 var srvSubnetName = 'snet-srv-${region}-001'
-var publicIPAddressDNSName = toLower('${companyNamePrefix}${deploymentNumber}-adfs-${uniqueString(resourceGroup().id)}')
+var publicIPAddressDNSName = toLower('${companyNamePrefix}-adfs-${uniqueString(resourceGroup().id)}')
 var wapVMName = toUpper('${companyNamePrefix}${wapVMNameSuffix}')
 //var adDSCTemplate = '${assetLocation}scripts/adDSCConfiguration.zip'
 var DeployADFSFarmTemplate = 'InstallADFS.ps1'
 var DeployADFSFarmTemplateUri = '${assetLocation}scripts/InstallADFS.ps1'
 var CopyCertToWAPTemplate = 'CopyCertToWAP.ps1'
 var CopyCertToWAPTemplateUri = '${assetLocation}scripts/CopyCertToWAP.ps1'
+var InstallADCSTemplateUri = '${assetLocation}scripts/InstallADCS.ps1'
 //var adDSCConfigurationFunction = 'adDSCConfiguration.ps1\\DomainController'
 var subnets = [
   {
@@ -291,7 +277,6 @@ module adVMs 'modules/compute/vm-ad.bicep' = [for i in range(0, AdSrvToDeploy): 
     NetworkInterfaceName: networkInterfaceName
     virtualNetworkName: virtualNetworkName
     vmSize: vmSize
-    deploymentNumber: deploymentNumber
   }
   dependsOn: [
     NSGs
@@ -327,7 +312,6 @@ module adcsVM 'modules/compute/vm-adcs.bicep' = {
     NetworkInterfaceName: networkInterfaceName
     virtualNetworkName: virtualNetworkName
     vmSize: vmSize
-    deploymentNumber: deploymentNumber
   }
   dependsOn: [
     virtualNetworkDNSUpdate
@@ -351,7 +335,6 @@ module adfsVMs 'modules/compute/vm-adfs.bicep' = {
     virtualNetworkName: virtualNetworkName
     vmSize: vmSize
     wapVMName: wapVMName
-    deploymentNumber: deploymentNumber
     AdfsFarmCount: AdfsFarmCount
   }
   dependsOn: [
@@ -405,6 +388,27 @@ resource wapVMName_1_CopyCertToWAP 'Microsoft.Compute/virtualMachines/extensions
     adfsVMName_1_InstallADFS
   ]
 }]
+
+resource adcsVMName_InstallADCS 'Microsoft.Compute/virtualMachines/extensions@2015-06-15' = {
+  name: '${adcsVMName}/InstallADCS'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.9'
+    autoUpgradeMinorVersion: true
+    settings: {
+      fileUris: [
+        InstallADCSTemplateUri
+      ]
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File InstallADCS.ps1'
+    }
+  }
+  dependsOn: [
+    adcsVM
+    adfsVMName_1_InstallADFS
+  ]
+}
 
 // Deploy the Microsoft Sentinel instance
 module workspace 'modules/sentinel.bicep' = {

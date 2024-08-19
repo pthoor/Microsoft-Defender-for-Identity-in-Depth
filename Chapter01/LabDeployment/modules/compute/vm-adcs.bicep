@@ -11,8 +11,9 @@ param adminUsername string
 @description('Location of scripts')
 param DeployADCSTemplateUri string = 'https://raw.githubusercontent.com/pthoor/microsoft-defender-for-identity-in-depth/main/Chapter01/LabDeployment/'
 
-@description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
-param deploymentNumber string = '1'
+//@description('When deploying the stack N times, define the instance - this will be appended to some resource names to avoid collisions.')
+//param deploymentNumber string = '1'
+
 param adSubnetName string = 'adSubnet'
 param adcsVMName string = 'AZADCS'
 param adDomainName string = 'contoso.local'
@@ -30,8 +31,8 @@ param vmSize string = 'Standard_B2ms'
 var imageOffer = 'WindowsServer'
 var imagePublisher = 'MicrosoftWindowsServer'
 var imageSKU = '2022-datacenter'
-var adcsPubIPName = 'adcsPubIP${deploymentNumber}'
-var adcsNicName = 'adcs-${NetworkInterfaceName}${deploymentNumber}'
+var adcsPubIPName = 'adcs-pip'
+var adcsNicName = 'adcs-${NetworkInterfaceName}'
 var shortDomainName = split(adDomainName, '.')[0]
 var domainJoinOptions = 3
 
@@ -44,7 +45,7 @@ resource adcsPIPName 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
   properties: {
     publicIPAllocationMethod: 'Dynamic'
     dnsSettings: {
-      domainNameLabel: toLower('${adcsVMName}${deploymentNumber}${uniqueString(resourceGroup().id)}')
+      domainNameLabel: toLower('${adcsVMName}${uniqueString(resourceGroup().id)}')
     }
   }
 }
@@ -58,7 +59,7 @@ resource adcs_NicName 'Microsoft.Network/networkInterfaces@2022-07-01' = {
   properties: {
     ipConfigurations: [
       {
-        name: 'ipconfig${deploymentNumber}'
+        name: 'adcsipconfig'
         properties: {
           privateIPAllocationMethod: 'Static'
           subnet: {
@@ -145,27 +146,6 @@ resource adcs_joindomain 'Microsoft.Compute/virtualMachines/extensions@2022-08-0
       Password: adminPassword
     }
   }
-}
-
-resource adcsVMName_InstallADCS 'Microsoft.Compute/virtualMachines/extensions@2015-06-15' = {
-  name: 'InstallADCS'
-  parent: adcsVMName_resource
-  location: location
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.9'
-    autoUpgradeMinorVersion: true
-    settings: {
-      fileUris: [
-        uri(DeployADCSTemplateUri, 'scripts/InstallADCS.ps1')
-      ]
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File InstallADCS.ps1 -templateBaseUrl ${DeployADCSTemplateUri}'
-    }
-  }
-  dependsOn: [
-    adcs_joindomain
-  ]
 }
 
 resource guestConfigExtension 'Microsoft.Compute/virtualMachines/extensions@2022-08-01' = {

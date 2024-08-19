@@ -3,13 +3,13 @@ $CAName = "ContosoRootCA"
 $CommonName = "Contoso Root CA"
 $ValidityPeriodYears = 5
 $CSP = "RSA#Microsoft Software Key Storage Provider"
-$KeyLength = 4096
+$KeyLength = 2048
 $CRLPath = "C:\CertEnroll\"
 $DatabasePath = "C:\Windows\System32\CertLog\"
 $LogPath = "C:\Windows\System32\CertLog\"
 
 # Install AD CS role
-Install-WindowsFeature ADCS-Cert-Authority, ADCS-Web-Enrollment, ADCS-Online-Cert-Responder -IncludeManagementTools
+Install-WindowsFeature ADCS-Cert-Authority, ADCS-Web-Enrollment -IncludeManagementTools
 
 # Install AD CS
 Install-AdcsCertificationAuthority `
@@ -23,14 +23,8 @@ Install-AdcsCertificationAuthority `
     -ValidityPeriodUnits $ValidityPeriodYears `
     -DatabaseDirectory $DatabasePath `
     -LogDirectory $LogPath `
-    -SharedFolder $CRLPath
+    -Confirm:$false
 
-# Configure CRL Distribution Point (CDP)
-Add-CertificationAuthority -CAName $CAName -CRLPath "file://$CRLPath\$CAName.crl" -CRLFlag IncludeInAllCRLs,PublishDeltaCRLs
-Set-CertificationAuthority -CAName $CAName -CRLPeriodUnits 1 -CRLPeriod "Days"
-
-# Configure Authority Information Access (AIA)
-Add-CertificationAuthority -CAName $CAName -AIAPublish "file://$CRLPath\$CAName.crt" -AIAIncludeInCert
 
 # Create a vulnerable certificate template for MDI
 $TemplateName = "VulnerableTemplate"

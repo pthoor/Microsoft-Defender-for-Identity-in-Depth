@@ -9,8 +9,10 @@ var var_dmzNSGName = 'nsg-dmz-wap'
 var var_bastionNSGName = 'nsg-bastion'
 var var_cliNSGName = 'nsg-int-cli'
 var adsubnetrange = subnets[0].properties.addressPrefix
-var dmzSubnetRange = subnets[1].properties.addressPrefix
-var cliSubnetRange = subnets[2].properties.addressPrefix
+var bastionSubnetRange = subnets[1].properties.addressPrefix
+var dmzSubnetRange = subnets[2].properties.addressPrefix
+var srvSubnetRange = subnets[3].properties.addressPrefix
+var cliSubnetRange = subnets[4].properties.addressPrefix
 
 resource adNSGName 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
   name: var_adNSGName
@@ -31,6 +33,20 @@ resource adNSGName 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
           destinationAddressPrefix: adsubnetrange
           access: 'Deny'
           priority: 110
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'allow_bastion_to_AD'
+        properties: {
+          description: 'Allow Bastion to AD Servers'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3389'
+          sourceAddressPrefix: bastionSubnetRange
+          destinationAddressPrefix: adsubnetrange
+          access: 'Allow'
+          priority: 111
           direction: 'Inbound'
         }
       }
