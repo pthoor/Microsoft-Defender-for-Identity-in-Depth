@@ -108,6 +108,21 @@ module dataCollectionRuleChangeTracking 'modules/datacollection/dcr_ChangeTracki
   ]
 }
 
+// Deploy Change Tracking Extension on Windows VM
+module changeTrackingExtension 'modules/azuremonitoragent/changetrackingWindows.bicep' = [for vmName in vmNames: {
+  name: '${vmName}-windows.ChangeTracking-Windows'
+  params: {
+    vmName: vmName
+    location: location
+  }
+  dependsOn: [
+    vms
+    dataCollectionRuleChangeTracking
+    azureMonitorAgent
+    changeTrackingSolution
+  ]
+}]
+
 // Associate the data collection rule (Change Tracking) with the virtual machines
 resource associationChangeTracking 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = [for (vmId, index) in vmNames : {
   name: 'dcr-ct-association-${index}'

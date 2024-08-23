@@ -25,22 +25,10 @@ Install-AdcsCertificationAuthority `
     -LogDirectory $LogPath `
     -Confirm:$false
 
+Install-AdcsWebEnrollment -Force
 
-# Create a vulnerable certificate template for MDI
-$TemplateName = "VulnerableTemplate"
-$Template = New-CertificateTemplate `
-    -Name $TemplateName `
-    -ValidityPeriod "1 year" `
-    -KeyLength 2048 `
-    -MinimumKeyLength 1024 `
-    -SignatureAlgorithm "SHA1" `
-    -SubjectName "CommonName" `
-    -SubjectNameSource "None"
-
-# Enable Auditing for AD CS
-auditpol /set /subcategory:"Certification Services" /success:enable /failure:enable
-auditpol /set /subcategory:"Object Access" /success:enable /failure:enable
-auditpol /set /subcategory:"Logon/Logoff" /success:enable /failure:enable
+# Enable Auditing for AD CS - required for MDI
+certutil -setreg CA\AuditFilter 127 
 
 # Restart the AD CS service to apply the changes
 Restart-Service CertSvc

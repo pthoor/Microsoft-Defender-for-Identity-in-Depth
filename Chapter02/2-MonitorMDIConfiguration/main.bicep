@@ -2,7 +2,7 @@ param location string = resourceGroup().location
 param logAnalyticsWorkspaceName string
 param dcrName string = 'MDIConfig-dcr'
 param fileFormat string = 'json'
-param filePath string = 'C:\\temp\\MDIConfig.json'
+param filePath string = 'C:\\temp\\MDIConfig\\MDI-configuration-report-CONTOSO.LOCAL.json'
 param customTableName string = 'MDIConfig_CL'
 param retentionInDays int = 30
 
@@ -23,7 +23,6 @@ var columns = [
 
 @description('The names of the virtual machines that will be associated with the Data Collection Rule.')
 param vmNames array = [
-  'CONTOSODC0'
   'CONTOSOCS'
 ]
 
