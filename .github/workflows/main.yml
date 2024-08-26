@@ -17,8 +17,8 @@ jobs:
           git config --global user.email "pierre.thoor@gmail.com"
           git config --global user.name "pthoor"
 
-      - name: Add upstream remote
-        run: git remote add upstream https://github.com/PacktPublishing/Microsoft-Defender-for-Identity-in-Depth.git
+      - name: Add fork as remote
+        run: git remote add fork https://github.com/pthoor/Packt-Microsoft-Defender-for-Identity-in-Depth.git
 
       - name: Force push changes to upstream
-        run: git push upstream main --force
+        run: git push fork main:main --force
