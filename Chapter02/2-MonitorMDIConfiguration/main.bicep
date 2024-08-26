@@ -1,8 +1,7 @@
 param location string = resourceGroup().location
 param logAnalyticsWorkspaceName string
 param dcrName string = 'MDIConfig-dcr'
-param fileFormat string = 'json'
-param filePath string = 'C:\\temp\\MDIConfig\\MDI-configuration-report-CONTOSO.LOCAL.json'
+param filePath string = 'C:\\temp\\MDIConfig\\MDI-configuration.json'
 param customTableName string = 'MDIConfig_CL'
 param retentionInDays int = 30
 
@@ -64,7 +63,6 @@ module dataCollectionRule 'modules/datacollection/dcr.bicep' = {
     dcrName: dcrName
     dataCollectionEndpointId: dataCollectionEndpoint.outputs.id
     filePath: filePath
-    fileFormat: fileFormat
     tableName: customTableName
     columns: columns
   }

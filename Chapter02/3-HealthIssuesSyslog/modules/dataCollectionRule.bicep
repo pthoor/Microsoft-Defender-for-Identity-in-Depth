@@ -1,8 +1,8 @@
+targetScope = 'resourceGroup'
+
 param dcrName string
 param logAnalyticsWorkspaceId string
 param streamName string = 'Microsoft-Syslog'
-
-targetScope = 'resourceGroup'
 
 resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: dcrName

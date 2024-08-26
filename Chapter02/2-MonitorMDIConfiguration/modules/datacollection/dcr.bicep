@@ -14,18 +14,13 @@ param location string = resourceGroup().location
 @description('The complete path to the file to be collected, e.g. C:\\Logs\\CustomLog.json or C:\\Logs\\CustomLog.txt')
 param filePath string
 
-@allowed([
-  'text'
-  'json'
-])
-param fileFormat string
-
 @description('The name of the custom table (_CL) in the Log Analytics workspace, needs to be pre-created in Log Analytics')
 param tableName string
 
 param columns array
 
-var streamName = 'Custom-Text-${tableName}'
+var streamName = 'Custom-Json-stream'
+var tableOutputStream = 'Custom-${tableName}'
 
 // Resource
 resource dcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
@@ -53,7 +48,7 @@ resource dcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
           filePatterns: [
             filePath
           ]
-          format: fileFormat
+          format: 'json'
           name: streamName
         }
       ]
@@ -75,7 +70,7 @@ resource dcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
           'law'
         ]
         transformKql: 'source'
-        outputStream: 'Custom-${tableName}'
+        outputStream: tableOutputStream
       }
     ]
   }
