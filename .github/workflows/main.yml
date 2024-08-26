@@ -19,7 +19,7 @@ jobs:
           git config --global user.name "pthoor"
 
       - name: Add target repository as a remote
-        run: git remote add target https://github.com/PacktPublishing/Microsoft-Defender-for-Identity-in-Depth
+        run: git remote add target https://github.com/PacktPublishing/Microsoft-Defender-for-Identity-in-Depth.git
 
       - name: Push changes to the target repository
         run: |
