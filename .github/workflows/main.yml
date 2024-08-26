@@ -20,11 +20,5 @@ jobs:
       - name: Add upstream remote
         run: git remote add upstream https://github.com/PacktPublishing/Microsoft-Defender-for-Identity-in-Depth.git
 
-      - name: Fetch changes from upstream
-        run: |
-          git fetch upstream
-          git checkout main
-          git merge upstream/main --allow-unrelated-histories
-
-      - name: Push changes to the fork
-        run: git push origin main --force
+      - name: Force push changes to upstream
+        run: git push upstream main --force
