@@ -1,4 +1,4 @@
-name: Sync Main Branch to Packt Publishing repo
+name: Sync Main Branch to External Repo
 on:
   workflow_dispatch:
 
@@ -22,4 +22,4 @@ jobs:
       - name: Push changes to the target repository
         run: |
           git fetch target
-          git push target main:main
+          git push target HEAD:main
