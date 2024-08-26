@@ -20,7 +20,7 @@ jobs:
           git config --global user.name "pthoor"
 
       - name: Add fork as remote
-        run: git remote add fork https://github.com/pthoor/Packt-Microsoft-Defender-for-Identity-in-Depth.git
+        run: git remote add fork https://${{ secrets.GITHUB_TOKEN }}@github.com/pthoor/Packt-Microsoft-Defender-for-Identity-in-Depth.git
 
       - name: Force push changes to upstream
         run: git push fork main:main --force
