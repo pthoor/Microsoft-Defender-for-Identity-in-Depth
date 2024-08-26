@@ -1,4 +1,4 @@
-name: Sync Fork from Upstream
+name: Sync book to Fork
 
 on:
   workflow_dispatch:
@@ -6,6 +6,8 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
