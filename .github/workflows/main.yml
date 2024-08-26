@@ -27,4 +27,4 @@ jobs:
           git merge upstream/main --allow-unrelated-histories
 
       - name: Push changes to the fork
-        run: git push origin main
+        run: git push origin main --force
